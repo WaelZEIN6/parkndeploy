@@ -5,10 +5,6 @@ on:
     tags:
       - 'v*'
 
-permissions:
-  # Require write permission to Fetch an OIDC token (required for federated credential) and write it
-  # It will be automatically used on actions / cli that needs it
-  id-token: write
 
 env: 
   AZURE_RG_NAME: rg-${{ vars.PROJECT_NAME }}-${{ vars.AZURE_RESOURCE_IDENTIFIER }}
@@ -54,6 +50,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     needs: [build_backend, build_frontend]
+    permissions:
+      contents: read
+      id-token: write
     outputs:
       appServiceName: ${{ steps.bicep_deploy.outputs.appServiceName }}
       staticWebAppName: ${{ steps.bicep_deploy.outputs.staticWebAppName }}
@@ -85,6 +84,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: deploy_infrastructure
     environment: production
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Download Backend Artifact
         uses: actions/download-artifact@v4
@@ -107,6 +109,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: deploy_infrastructure
     environment: production
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
