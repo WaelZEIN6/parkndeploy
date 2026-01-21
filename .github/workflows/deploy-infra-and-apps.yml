@@ -88,7 +88,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: backend-app
-          path: ./backend/publish
+          path: ./backend/ParkNDeploy.Api/publish
       - name: Login to Azure 
         uses: azure/login@v2
         with:
@@ -97,9 +97,9 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Deploy backend to App Service
         uses: azure/webapps-deploy@v2
-        with:
+        with: 
           app-name: ${{ needs.deploy_infrastructure.outputs.appServiceName }}
-          package: ./backend/publish
+          package: ./backend/ParkNDeploy.Api/publish
     
   deploy_frontend:
     runs-on: ubuntu-latest
