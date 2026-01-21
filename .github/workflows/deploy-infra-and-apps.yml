@@ -1,55 +1,18 @@
 name: CI build_backend - build_frontend and CD infrastructure and apps deploy
 
 on:
-  push:
-    tags:
-      - 'v*'
-
+  workflow_run:
+    workflows: ["CI-Build-Backend-Build-Frontend"]
+    types:
+      - completed
 
 env: 
   AZURE_RG_NAME: rg-${{ vars.PROJECT_NAME }}-${{ vars.AZURE_RESOURCE_IDENTIFIER }}
 
 jobs:
-  build_frontend: 
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Build Frontend
-        run: |
-          npm install
-          npm run build
-        env:
-          APP_VERSION: ${{ github.ref_name }}
-        working-directory: ./frontend
-      - name: Upload Frontend Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-dist
-          path: ./frontend/dist
-
-  build_backend:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-      - name: Publish Backend
-        run: dotnet publish -c Release -o ./publish
-        working-directory: ./backend
-      - name: Upload Backend Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-app
-          path: ./backend/publish
-
   deploy_infrastructure:
     runs-on: ubuntu-latest
     environment: production
-    needs: [build_backend, build_frontend]
     permissions:
       contents: read
       id-token: write
@@ -93,6 +56,8 @@ jobs:
         with:
           name: backend-app
           path: ./backend/publish
+          run-id: ${{ github.event.workflow_run.id }} 
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Login to Azure 
         uses: azure/login@v2
         with:
@@ -120,6 +85,8 @@ jobs:
         with:
           name: frontend-dist
           path: ./frontend/dist
+          run-id: ${{ github.event.workflow_run.id }} 
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Login to Azure 
         uses: azure/login@v2
         with:
